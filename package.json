@@ -1,38 +1,48 @@
 {
-    "name": "autocomplete-en-en",
-    "displayName": "autocomplete-en-en",
-    "description": "autocomplete English words when typing.",
-    "version": "0.0.1",
-    "publisher": "wushuaiBUAA",
-    "engines": {
-        "vscode": "^1.19.0"
-    },
-    "categories": [
-        "Other"
-    ],
-    "activationEvents": [
-        "onCommand:extension.sayHello"
-    ],
-    "main": "./out/extension",
-    "contributes": {
-        "commands": [
-            {
-                "command": "extension.sayHello",
-                "title": "Hello World"
-            }
-        ]
-    },
-    "scripts": {
-        "vscode:prepublish": "npm run compile",
-        "compile": "tsc -p ./",
-        "watch": "tsc -watch -p ./",
-        "postinstall": "node ./node_modules/vscode/bin/install",
-        "test": "npm run compile && node ./node_modules/vscode/bin/test"
-    },
-    "devDependencies": {
-        "typescript": "^2.6.1",
-        "vscode": "^1.1.6",
-        "@types/node": "^7.0.43",
-        "@types/mocha": "^2.2.42"
-    }
+      "name": "autocomplete-en-en",
+      "displayName": "English words hint",
+      "description": "English words autocompletion for VS Code",
+      "version": "0.0.1",
+      "license": "GPL-3.0",
+      "publisher": "wushuaiBUAA",
+      "author": "wushuaiBUAA",
+      "engines": {
+            "vscode": "^1.1.0"
+      },
+      "icon": "icon/icon.png",
+      "galleryBanner": {
+            "color": "#FFF5F5",
+            "theme": "light"
+      },
+      "categories": [
+            "Languages"
+      ],
+      "keywords": [
+            "vscode",
+            "English words",
+            "hint",
+            "autocompletion"
+      ],
+      "main": "./extension/main",
+      "scripts": {},
+      // "extensionDependencies": [
+      //       "luggage66.AWK"
+      // ],
+      "devDependencies": {
+            "vscode": "^1.1.0",
+            "fs-extra": "*",
+            "colors": "*",
+            "cheerio": "*",
+            "request": "*"
+      },
+      "dependencies": {},
+      "repository": {
+            "type": "git",
+            "url": "https://github.com/wushuaibuaa/vsautocomplete-en-en"
+      },
+      "homepage": "https://github.com/wushuaibuaa/vsautocomplete-en-en",
+      "activationEvents": [
+            "onLanguage:markdown",
+            "onLanguage:latex"
+      ]
 }

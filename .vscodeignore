@@ -1,8 +1,6 @@
-.vscode/**
-.vscode-test/**
-out/test/**
-out/**/*.map
-src/**
-.gitignore
-tsconfig.json
-vsc-extension-quickstart.md
+icon/icon.svg
+test_awk_files/**
+utils/**
+vscode.d.ts
+*.tgz
+*.vsix

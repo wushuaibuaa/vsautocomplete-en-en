@@ -1,0 +1,242 @@
+[
+  {
+    "set": "i18n",
+    "name": "bindtextdomain",
+    "usage": "bindtextdomain(directory [, domain])",
+    "desc": "Set the directory in which\ngawk will look for message translation files, in case they\nwill not or cannot be placed in the “standard” locations\n(e.g., during testing).\nIt returns the directory in which domain is “bound.”\n"
+  },
+  {
+    "set": "i18n",
+    "name": "dcgettext",
+    "usage": "dcgettext(string [, domain [, category] ])",
+    "desc": "Return the translation of string in\ntext domain domain for locale category category.\nThe default value for domain is the current value of TEXTDOMAIN.\nThe default value for category is \"LC_MESSAGES\".\n"
+  },
+  {
+    "set": "i18n",
+    "name": "dcngettext",
+    "usage": "dcngettext(string1, string2, number [, domain [, category] ])",
+    "desc": "Return the plural form used for number of the\ntranslation of string1 and string2 in text domain\ndomain for locale category category. string1 is the\nEnglish singular variant of a message, and string2 is the English plural\nvariant of the same message.\nThe default value for domain is the current value of TEXTDOMAIN.\nThe default value for category is \"LC_MESSAGES\".\n"
+  },
+  {
+    "set": "type",
+    "name": "isarray",
+    "usage": "isarray(x)",
+    "desc": "Return a true value if x is an array. Otherwise, return false.\n"
+  },
+  {
+    "set": "bitwise",
+    "name": "and",
+    "usage": "and(v1, v2 [, …])",
+    "desc": "Return the bitwise AND of the arguments. There must be at least two.\n"
+  },
+  {
+    "set": "bitwise",
+    "name": "compl",
+    "usage": "compl(val)",
+    "desc": "Return the bitwise complement of val.\n"
+  },
+  {
+    "set": "bitwise",
+    "name": "lshift",
+    "usage": "lshift(val, count)",
+    "desc": "Return the value of val, shifted left by count bits.\n"
+  },
+  {
+    "set": "bitwise",
+    "name": "or",
+    "usage": "or(v1, v2 [, …])",
+    "desc": "Return the bitwise OR of the arguments. There must be at least two.\n"
+  },
+  {
+    "set": "bitwise",
+    "name": "rshift",
+    "usage": "rshift(val, count)",
+    "desc": "Return the value of val, shifted right by count bits.\n"
+  },
+  {
+    "set": "bitwise",
+    "name": "xor",
+    "usage": "xor(v1, v2 [, …])",
+    "desc": "Return the bitwise XOR of the arguments. There must be at least two.\n"
+  },
+  {
+    "set": "time",
+    "name": "mktime",
+    "usage": "mktime(datespec)",
+    "desc": "Turn datespec into a timestamp in the same form\nas is returned by systime().  It is similar to the function of the\nsame name in ISO C.  The argument, datespec, is a string of the form\n\"YYYY MM DD HH MM SS [DST]\".\nThe string consists of six or seven numbers representing, respectively,\nthe full year including century, the month from 1 to 12, the day of the month\nfrom 1 to 31, the hour of the day from 0 to 23, the minute from 0 to\n59, the second from 0 to 60,54\nand an optional daylight-savings flag.\n"
+  },
+  {
+    "set": "time",
+    "name": "strftime",
+    "usage": "strftime([format [, timestamp [, utc-flag] ] ])",
+    "desc": "Format the time specified by timestamp\nbased on the contents of the format string and return the result.\nIt is similar to the function of the same name in ISO C.\nIf utc-flag is present and is either nonzero or non-null, the value\nis formatted as UTC (Coordinated Universal Time, formerly GMT or Greenwich\nMean Time). Otherwise, the value is formatted for the local time zone.\nThe timestamp is in the same format as the value returned by the\nsystime() function.  If no timestamp argument is supplied,\ngawk uses the current time of day as the timestamp.\nWithout a format argument, strftime() uses\nthe value of PROCINFO[\"strftime\"] as the format string\n(see Built-in Variables).\nThe default string value is\n\"%a %b %e %H:%M:%S %Z %Y\".  This format string produces\noutput that is equivalent to that of the date utility.\nYou can assign a new value to PROCINFO[\"strftime\"] to\nchange the default format; see the following list for the various format directives.\n"
+  },
+  {
+    "set": "time",
+    "name": "systime",
+    "usage": "systime()",
+    "desc": "Return the current time as the number of seconds since\nthe system epoch.  On POSIX systems, this is the number of seconds\nsince 1970-01-01 00:00:00 UTC, not counting leap seconds.\nIt may be a different number on other systems.\n"
+  },
+  {
+    "set": "io",
+    "name": "close",
+    "usage": "close(filename [, how])",
+    "desc": "Close the file filename for input or output. Alternatively, the\nargument may be a shell command that was used for creating a coprocess, or\nfor redirecting to or from a pipe; then the coprocess or pipe is closed.\nSee Close Files And Pipes\nfor more information.\n"
+  },
+  {
+    "set": "io",
+    "name": "fflush",
+    "usage": "fflush([filename])",
+    "desc": "Flush any buffered output associated with filename, which is either a\nfile opened for writing or a shell command for redirecting output to\na pipe or coprocess.\n"
+  },
+  {
+    "set": "io",
+    "name": "system",
+    "usage": "system(command)",
+    "desc": "Execute the operating system\ncommand command and then return to the awk program.\nReturn command’s exit status (see further on).\n"
+  },
+  {
+    "set": "string",
+    "name": "asorti",
+    "usage": "asorti(source [, dest [, how ] ]) #",
+    "desc": "These two functions are similar in behavior, so they are described\ntogether.\n"
+  },
+  {
+    "set": "string",
+    "name": "asort",
+    "usage": "asort(source [, dest [, how ] ]) #",
+    "desc": "These two functions are similar in behavior, so they are described\ntogether.\n"
+  },
+  {
+    "set": "string",
+    "name": "gensub",
+    "usage": "gensub(regexp, replacement, how [, target]) #",
+    "desc": "Search the target string target for matches of the regular\nexpression regexp.  If how is a string beginning with\n‘g’ or ‘G’ (short for “global”), then replace all matches of regexp with\nreplacement.  Otherwise, how is treated as a number indicating\nwhich match of regexp to replace. If no target is supplied,\nuse $0.  It returns the modified string as the result\nof the function and the original target string is not changed.\n"
+  },
+  {
+    "set": "string",
+    "name": "gsub",
+    "usage": "gsub(regexp, replacement [, target])",
+    "desc": "Search target for\nall of the longest, leftmost, nonoverlapping matching\nsubstrings it can find and replace them with replacement.\nThe ‘g’ in gsub() stands for\n“global,” which means replace everywhere.  For example:\n"
+  },
+  {
+    "set": "string",
+    "name": "index",
+    "usage": "index(in, find)",
+    "desc": "Search the string in for the first occurrence of the string\nfind, and return the position in characters where that occurrence\nbegins in the string in.  Consider the following example:\n"
+  },
+  {
+    "set": "string",
+    "name": "length",
+    "usage": "length([string])",
+    "desc": "Return the number of characters in string.  If\nstring is a number, the length of the digit string representing\nthat number is returned.  For example, length(\"abcde\") is five.  By\ncontrast, length(15 * 35) works out to three. In this example,\n15 * 35 = 525,\nand 525 is then converted to the string \"525\", which has\nthree characters.\n"
+  },
+  {
+    "set": "string",
+    "name": "match",
+    "usage": "match(string, regexp [, array])",
+    "desc": "Search string for the\nlongest, leftmost substring matched by the regular expression\nregexp and return the character position (index)\nat which that substring begins (one, if it starts at the beginning of\nstring).  If no match is found, return zero.\n"
+  },
+  {
+    "set": "string",
+    "name": "patsplit",
+    "usage": "patsplit(string, array [, fieldpat [, seps ] ]) #",
+    "desc": "Divide\nstring into pieces defined by fieldpat\nand store the pieces in array and the separator strings in the\nseps array.  The first piece is stored in\narray[1], the second piece in array[2], and so\nforth.  The third argument, fieldpat, is\na regexp describing the fields in string (just as FPAT is\na regexp describing the fields in input records).\nIt may be either a regexp constant or a string.\nIf fieldpat is omitted, the value of FPAT is used.\npatsplit() returns the number of elements created.\nseps[i] is\nthe separator string\nbetween array[i] and array[i+1].\nAny leading separator will be in seps[0].\n"
+  },
+  {
+    "set": "string",
+    "name": "split",
+    "usage": "split(string, array [, fieldsep [, seps ] ])",
+    "desc": "Divide string into pieces separated by fieldsep\nand store the pieces in array and the separator strings in the\nseps array.  The first piece is stored in\narray[1], the second piece in array[2], and so\nforth.  The string value of the third argument, fieldsep, is\na regexp describing where to split string (much as FS can\nbe a regexp describing where to split input records).\nIf fieldsep is omitted, the value of FS is used.\nsplit() returns the number of elements created.\nseps is a gawk extension, with seps[i]\nbeing the separator string\nbetween array[i] and array[i+1].\nIf fieldsep is a single\nspace, then any leading whitespace goes into seps[0] and\nany trailing\nwhitespace goes into seps[n], where n is the\nreturn value of\nsplit() (i.e., the number of elements in array).\n"
+  },
+  {
+    "set": "string",
+    "name": "sprintf",
+    "usage": "sprintf(format, expression1, …)",
+    "desc": "Return (without printing) the string that printf would\nhave printed out with the same arguments\n(see Printf).\nFor example:\n"
+  },
+  {
+    "set": "string",
+    "name": "strtonum",
+    "usage": "strtonum(str) #",
+    "desc": "Examine str and return its numeric value.  If str\nbegins with a leading ‘0’, strtonum() assumes that str\nis an octal number.  If str begins with a leading ‘0x’ or\n‘0X’, strtonum() assumes that str is a hexadecimal number.\nFor example:\n"
+  },
+  {
+    "set": "string",
+    "name": "sub",
+    "usage": "sub(regexp, replacement [, target])",
+    "desc": "Search target, which is treated as a string, for the\nleftmost, longest substring matched by the regular expression regexp.\nModify the entire string\nby replacing the matched text with replacement.\nThe modified string becomes the new value of target.\nReturn the number of substitutions made (zero or one).\n"
+  },
+  {
+    "set": "string",
+    "name": "substr",
+    "usage": "substr(string, start [, length ])",
+    "desc": "Return a length-character-long substring of string,\nstarting at character number start.  The first character of a\nstring is character number one.48\nFor example, substr(\"washington\", 5, 3) returns \"ing\".\n"
+  },
+  {
+    "set": "string",
+    "name": "tolower",
+    "usage": "tolower(string)",
+    "desc": "Return a copy of string, with each uppercase character\nin the string replaced with its corresponding lowercase character.\nNonalphabetic characters are left unchanged.  For example,\ntolower(\"MiXeD cAsE 123\") returns \"mixed case 123\".\n"
+  },
+  {
+    "set": "string",
+    "name": "toupper",
+    "usage": "toupper(string)",
+    "desc": "Return a copy of string, with each lowercase character\nin the string replaced with its corresponding uppercase character.\nNonalphabetic characters are left unchanged.  For example,\ntoupper(\"MiXeD cAsE 123\") returns \"MIXED CASE 123\".\n"
+  },
+  {
+    "set": "number",
+    "name": "atan2",
+    "usage": "atan2(y, x)",
+    "desc": "Return the arctangent of y / x in radians.\nYou can use ‘pi = atan2(0, -1)’ to retrieve the value of\npi.\n"
+  },
+  {
+    "set": "number",
+    "name": "cos",
+    "usage": "cos(x)",
+    "desc": "Return the cosine of x, with x in radians.\n"
+  },
+  {
+    "set": "number",
+    "name": "exp",
+    "usage": "exp(x)",
+    "desc": "Return the exponential of x (e ^ x) or report\nan error if x is out of range.  The range of values x can have\ndepends on your machine’s floating-point representation.\n"
+  },
+  {
+    "set": "number",
+    "name": "int",
+    "usage": "int(x)",
+    "desc": "Return the nearest integer to x, located between x and zero and\ntruncated toward zero.\nFor example, int(3) is 3, int(3.9) is 3, int(-3.9)\nis -3, and int(-3) is -3 as well.\n"
+  },
+  {
+    "set": "number",
+    "name": "log",
+    "usage": "log(x)",
+    "desc": "Return the natural logarithm of x, if x is positive;\notherwise, return NaN (“not a number”) on IEEE 754 systems.\nAdditionally, gawk prints a warning message when x\nis negative.\n"
+  },
+  {
+    "set": "number",
+    "name": "rand",
+    "usage": "rand()",
+    "desc": "Return a random number.  The values of rand() are\nuniformly distributed between zero and one.\nThe value could be zero but is never one.43\n"
+  },
+  {
+    "set": "number",
+    "name": "sin",
+    "usage": "sin(x)",
+    "desc": "Return the sine of x, with x in radians.\n"
+  },
+  {
+    "set": "number",
+    "name": "sqrt",
+    "usage": "sqrt(x)",
+    "desc": "Return the positive square root of x.\ngawk prints a warning message\nif x is negative.  Thus, sqrt(4) is 2.\n"
+  },
+  {
+    "set": "number",
+    "name": "srand",
+    "usage": "srand([x])",
+    "desc": "Set the starting point, or seed,\nfor generating random numbers to the value x.\n"
+  }
+]
