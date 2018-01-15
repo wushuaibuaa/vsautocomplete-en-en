@@ -10,7 +10,7 @@ const QUOTES = '\'\"';
 
 const DOCUMENT_SELECTOR = ['md', 'tex'];
 
-const HOVER_INFO_FUNCTION = '**Word**';
+const HOVER_INFO_WORD = '**Word**';
 // const HOVER_INFO_VARIABLE = '**AWK Variable**';
 // const HOVER_INFO_VARIABLE_GAWK = '**AWK Variable** (**GAWK**)';
 
@@ -74,14 +74,14 @@ function searchHintCompletionItems(keyword) {
 	return wordCompletionItems.filter(it => it._filter.startsWith(keyword));
 }
 
-function findHintItem(funcOrVarName) {
-	let item = wordItems.filter(it => it.name == funcOrVarName);
-	item.length || (item = varItems.filter(it => it.name == funcOrVarName));
+function findHintItem(wordname) {
+	let item = wordItems.filter(it => it.name == wordname);
+	item.length || (item = varItems.filter(it => it.name == wordname));
 	return item.length ? item[0] : null;
 }
 
-function findHintFunctionItem(funcOrVarName) {
-	let item = wordItems.filter(it => it.name == funcOrVarName);
+function findHintFunctionItem(wordname) {
+	let item = wordItems.filter(it => it.name == wordname);
 	return item.length ? item[0] : null;
 }
 
@@ -114,7 +114,7 @@ function activate(context) {
 				if (!item) return null;
 				if (item.usage)//Function
 					return new vscode.Hover([
-						HOVER_INFO_FUNCTION, `*${item.usage}*`, item.desc
+						HOVER_INFO_WORD, `*${item.usage}*`, item.desc
 					]);
 			}
 		}));
