@@ -2,22 +2,21 @@
 let vscode = require('vscode');
 
 const HINT_DATA_FILES = {
-	FUNC: `${__dirname}/../hint_data/functions.json`,
-	VAR: `${__dirname}/../hint_data/variables.json`
+	WORD: `${__dirname}/../hint_data/words.json`,
+	// VAR: `${__dirname}/../hint_data/variables.json`
 };
 
 const QUOTES = '\'\"';
 
 const DOCUMENT_SELECTOR = ['md', 'tex'];
 
-const HOVER_INFO_FUNCTION = '**AWK Function**';
-const HOVER_INFO_VARIABLE = '**AWK Variable**';
-const HOVER_INFO_VARIABLE_GAWK = '**AWK Variable** (**GAWK**)';
+const HOVER_INFO_FUNCTION = '**Word**';
+// const HOVER_INFO_VARIABLE = '**AWK Variable**';
+// const HOVER_INFO_VARIABLE_GAWK = '**AWK Variable** (**GAWK**)';
 
 
-let funcCompletionItems = [],
-	varCompletionItems = [],
-	funcItems = [],
+let wordCompletionItems = [],
+	wordItems = [],
 	varItems = [];
 
 function getTextBeforeCursor(document, position) {
@@ -25,6 +24,7 @@ function getTextBeforeCursor(document, position) {
 	var range = new vscode.Range(start, position);
 	return document.getText(range);
 }
+
 function getTextAroundCursor(document, position) {
 	let lineText = document.lineAt(position).text,
 		pos = position.character;
@@ -34,6 +34,7 @@ function getTextAroundCursor(document, position) {
 	afterText = (afterText.match(/^\w*/) || [''])[0];
 	return beforeText + afterText;
 }
+
 function isCursorInTheString(textBeforeCursor) {
 	// TODO 考虑上一行行末是否有 \ 字符, 如果有的话就还要检测上一行
 	if (textBeforeCursor.indexOf(QUOTES[0]) == -1 ||
@@ -49,55 +50,52 @@ function isCursorInTheString(textBeforeCursor) {
 	}
 	return inStr;
 }
+
 function getFuncAndParamsInfoAroundCursor(textBeforeCursor) {
 	if (textBeforeCursor.indexOf('(') == -1) return false;
 	return textBeforeCursor.match(/.+\b(\w+)\((.*?)$/);
 }
 
 function loadHintData() {
-	funcCompletionItems = [];
-	varCompletionItems = [];
-	funcItems = require(HINT_DATA_FILES.FUNC);
-	varItems = require(HINT_DATA_FILES.VAR);
-	funcItems.forEach(func => {
-		let item = new vscode.CompletionItem(func.name, vscode.CompletionItemKind.Function);
-		item.documentation = func.usage + '\n' + func.desc;
-		item.detail = func.set;
-		item._filter = func.name;
-		funcCompletionItems.push(item);
-	});
-	varItems.forEach(v => {
-		let item = new vscode.CompletionItem(v.name, vscode.CompletionItemKind.Variable);
-		item.documentation = v.desc;
-		item.detail = v.set + (v.onlyGAWK ? '(GAWK) ' : '');
-		item._filter = v.name;
-		varCompletionItems.push(item);
+	wordCompletionItems = [];
+	wordItems = require(HINT_DATA_FILES.WORD);
+	// varItems = require(HINT_DATA_FILES.VAR);
+	wordItems.forEach(word => {
+		let item = new vscode.CompletionItem(word.name, vscode.CompletionItemKind.Function);
+		item.documentation = word.usage + '\n' + word.desc;
+		item.detail = word.set;
+		item.usage = word.usage;
+		item._filter = word.name;
+		wordCompletionItems.push(item);
 	});
 }
+
 function searchHintCompletionItems(keyword) {
-	return funcCompletionItems.filter(it => it._filter.startsWith(keyword))
-		.concat(varCompletionItems.filter(it => it._filter.startsWith(keyword)));
+	return wordCompletionItems.filter(it => it._filter.startsWith(keyword));
 }
+
 function findHintItem(funcOrVarName) {
-	let item = funcItems.filter(it => it.name == funcOrVarName);
+	let item = wordItems.filter(it => it.name == funcOrVarName);
 	item.length || (item = varItems.filter(it => it.name == funcOrVarName));
 	return item.length ? item[0] : null;
 }
+
 function findHintFunctionItem(funcOrVarName) {
-	let item = funcItems.filter(it => it.name == funcOrVarName);
+	let item = wordItems.filter(it => it.name == funcOrVarName);
 	return item.length ? item[0] : null;
 }
 
 function activate(context) {
 	var subscriptions = context.subscriptions;
 	loadHintData();
+
 	subscriptions.push(
 		vscode.languages.registerCompletionItemProvider(DOCUMENT_SELECTOR, {
 			provideCompletionItems: (document, position/*, token*/) => {
 				let beforeText = getTextBeforeCursor(document, position);
 				if (isCursorInTheString(beforeText)) return [];
 				let keyword = (beforeText.match(/^.*?\b(\w*)$/) || ['', ''])[1];
-				if (!keyword) return funcCompletionItems.concat(varCompletionItems);
+				if (!keyword) return wordCompletionItems;
 				let items = searchHintCompletionItems(keyword);
 				return items;
 			},
@@ -118,10 +116,6 @@ function activate(context) {
 					return new vscode.Hover([
 						HOVER_INFO_FUNCTION, `*${item.usage}*`, item.desc
 					]);
-				//Variable
-				return new vscode.Hover([
-					item.onlyGAWK ? HOVER_INFO_VARIABLE_GAWK : HOVER_INFO_VARIABLE, item.desc
-				]);
 			}
 		}));
 
