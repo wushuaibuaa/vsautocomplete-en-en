@@ -2,22 +2,17 @@
 let vscode = require('vscode');
 
 const HINT_DATA_FILES = {
-	WORD: `${__dirname}/../hint_data/words.json`,
-	// VAR: `${__dirname}/../hint_data/variables.json`
+	WORD: `${__dirname}/../hint_data/words.json`
 };
 
 const QUOTES = '\'\"';
 
-const DOCUMENT_SELECTOR = ['md', 'tex'];
+const DOCUMENT_SELECTOR = ['markdown', 'latex'];
 
 const HOVER_INFO_WORD = '**Word**';
-// const HOVER_INFO_VARIABLE = '**AWK Variable**';
-// const HOVER_INFO_VARIABLE_GAWK = '**AWK Variable** (**GAWK**)';
-
 
 let wordCompletionItems = [],
-	wordItems = [],
-	varItems = [];
+	wordItems = [];
 
 function getTextBeforeCursor(document, position) {
 	var start = new vscode.Position(position.line, 0);
@@ -59,10 +54,11 @@ function getFuncAndParamsInfoAroundCursor(textBeforeCursor) {
 function loadHintData() {
 	wordCompletionItems = [];
 	wordItems = require(HINT_DATA_FILES.WORD);
-	// varItems = require(HINT_DATA_FILES.VAR);
+	// window.alert(len(wordItems));
+	console.log(wordItems.length);
 	wordItems.forEach(word => {
 		let item = new vscode.CompletionItem(word.name, vscode.CompletionItemKind.Function);
-		item.documentation = word.usage + '\n' + word.desc;
+		item.documentation = word.desc;
 		item.detail = word.set;
 		item.usage = word.usage;
 		item._filter = word.name;
@@ -71,12 +67,13 @@ function loadHintData() {
 }
 
 function searchHintCompletionItems(keyword) {
+	console.log(keyword)
 	return wordCompletionItems.filter(it => it._filter.startsWith(keyword));
 }
 
 function findHintItem(wordname) {
 	let item = wordItems.filter(it => it.name == wordname);
-	item.length || (item = varItems.filter(it => it.name == wordname));
+	// item.length || (item = varItems.filter(it => it.name == wordname));
 	return item.length ? item[0] : null;
 }
 
@@ -86,16 +83,18 @@ function findHintFunctionItem(wordname) {
 }
 
 function activate(context) {
-	var subscriptions = context.subscriptions;
+	// var subscriptions = context.subscriptions;
 	loadHintData();
 
-	subscriptions.push(
+	context.subscriptions.push(
 		vscode.languages.registerCompletionItemProvider(DOCUMENT_SELECTOR, {
 			provideCompletionItems: (document, position/*, token*/) => {
 				let beforeText = getTextBeforeCursor(document, position);
 				if (isCursorInTheString(beforeText)) return [];
 				let keyword = (beforeText.match(/^.*?\b(\w*)$/) || ['', ''])[1];
+				console.log(keyword)
 				if (!keyword) return wordCompletionItems;
+				// let keyword = beforeText;
 				let items = searchHintCompletionItems(keyword);
 				return items;
 			},
@@ -103,39 +102,39 @@ function activate(context) {
 		}
 		));
 
-	subscriptions.push(
-		vscode.languages.registerHoverProvider(DOCUMENT_SELECTOR, {
-			provideHover: (document, position/*, token*/) => {
-				let beforeText = getTextBeforeCursor(document, position);
-				if (isCursorInTheString(beforeText)) return [];
-				let textAround = getTextAroundCursor(document, position);
-				if (!textAround) return null;
-				let item = findHintItem(textAround);
-				if (!item) return null;
-				if (item.usage)//Function
-					return new vscode.Hover([
-						HOVER_INFO_WORD, `*${item.usage}*`, item.desc
-					]);
-			}
-		}));
+	// subscriptions.push(
+	// 	vscode.languages.registerHoverProvider(DOCUMENT_SELECTOR, {
+	// 		provideHover: (document, position/*, token*/) => {
+	// 			let beforeText = getTextBeforeCursor(document, position);
+	// 			if (isCursorInTheString(beforeText)) return [];
+	// 			let textAround = getTextAroundCursor(document, position);
+	// 			if (!textAround) return null;
+	// 			let item = findHintItem(textAround);
+	// 			if (!item) return null;
+	// 			if (item.usage)//Function
+	// 				return new vscode.Hover([
+	// 					HOVER_INFO_WORD, `*${item.usage}*`, item.desc
+	// 				]);
+	// 		}
+	// 	}));
 
-	subscriptions.push(
-		vscode.languages.registerSignatureHelpProvider(DOCUMENT_SELECTOR, {
-			provideSignatureHelp: (document, position/*, token*/) => {
-				let beforeText = getTextBeforeCursor(document, position);
-				if (isCursorInTheString(beforeText)) return null;
-				//end of the function
-				if (beforeText.match(/[);]$/)) return null;
-				let info;
-				if (!(info = getFuncAndParamsInfoAroundCursor(beforeText))) return null;
-				let item = findHintFunctionItem(info[1])//info[1] === funcName;
-				if (!item) return null;
-				let res = new vscode.SignatureHelp();
-				res.activeSignature = 0;
-				res.signatures = [new vscode.SignatureInformation(item.usage, item.desc)];
-				return res;
-			}
-		}, '(,'));
+	// subscriptions.push(
+	// 	vscode.languages.registerSignatureHelpProvider(DOCUMENT_SELECTOR, {
+	// 		provideSignatureHelp: (document, position/*, token*/) => {
+	// 			let beforeText = getTextBeforeCursor(document, position);
+	// 			if (isCursorInTheString(beforeText)) return null;
+	// 			//end of the function
+	// 			if (beforeText.match(/[);]$/)) return null;
+	// 			let info;
+	// 			if (!(info = getFuncAndParamsInfoAroundCursor(beforeText))) return null;
+	// 			let item = findHintFunctionItem(info[1])//info[1] === funcName;
+	// 			if (!item) return null;
+	// 			let res = new vscode.SignatureHelp();
+	// 			res.activeSignature = 0;
+	// 			res.signatures = [new vscode.SignatureInformation(item.usage, item.desc)];
+	// 			return res;
+	// 		}
+	// 	}, '(,'));
 
 }
 
