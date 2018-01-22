@@ -1,8 +1,8 @@
 {
       "name": "autocomplete-english-word",
-      "displayName": "English words hint",
-      "description": "English words autocompletion for VS Code",
-      "version": "0.0.3",
+      "displayName": "English word hint",
+      "description": "English word autocompletion for Visual Studio Code",
+      "version": "0.1.0",
       "license": "GPL-3.0",
       "publisher": "wushuaiBUAA",
       "author": "wushuaiBUAA",

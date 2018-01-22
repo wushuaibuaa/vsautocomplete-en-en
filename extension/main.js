@@ -55,7 +55,7 @@ function loadHintData() {
 	wordCompletionItems = [];
 	wordItems = require(HINT_DATA_FILES.WORD);
 	// window.alert(len(wordItems));
-	console.log(wordItems.length);
+	// console.log(wordItems.length);
 	wordItems.forEach(word => {
 		let item = new vscode.CompletionItem(word.name, vscode.CompletionItemKind.Function);
 		item.documentation = word.desc;
@@ -67,7 +67,7 @@ function loadHintData() {
 }
 
 function searchHintCompletionItems(keyword) {
-	console.log(keyword)
+	// console.log(keyword)
 	return wordCompletionItems.filter(it => it._filter.startsWith(keyword));
 }
 
@@ -83,40 +83,44 @@ function findHintFunctionItem(wordname) {
 }
 
 function activate(context) {
-	// var subscriptions = context.subscriptions;
+	var subscriptions = context.subscriptions;
 	loadHintData();
 
-	context.subscriptions.push(
+	subscriptions.push(
 		vscode.languages.registerCompletionItemProvider(DOCUMENT_SELECTOR, {
 			provideCompletionItems: (document, position/*, token*/) => {
 				let beforeText = getTextBeforeCursor(document, position);
+				// beforeText = beforeText.toLowerCase()
 				if (isCursorInTheString(beforeText)) return [];
 				let keyword = (beforeText.match(/^.*?\b(\w*)$/) || ['', ''])[1];
-				console.log(keyword)
+				// console.log(keyword)
 				if (!keyword) return wordCompletionItems;
 				// let keyword = beforeText;
 				let items = searchHintCompletionItems(keyword);
+				if (items.length == 0)  // 大写开头的单词不能不全，转成小写搜索一遍
+					items = searchHintCompletionItems(keyword.toLowerCase());
 				return items;
 			},
 			resolveCompletionItem: (item/*, token*/) => item
 		}
 		));
 
-	// subscriptions.push(
-	// 	vscode.languages.registerHoverProvider(DOCUMENT_SELECTOR, {
-	// 		provideHover: (document, position/*, token*/) => {
-	// 			let beforeText = getTextBeforeCursor(document, position);
-	// 			if (isCursorInTheString(beforeText)) return [];
-	// 			let textAround = getTextAroundCursor(document, position);
-	// 			if (!textAround) return null;
-	// 			let item = findHintItem(textAround);
-	// 			if (!item) return null;
-	// 			if (item.usage)//Function
-	// 				return new vscode.Hover([
-	// 					HOVER_INFO_WORD, `*${item.usage}*`, item.desc
-	// 				]);
-	// 		}
-	// 	}));
+	subscriptions.push(
+		vscode.languages.registerHoverProvider(DOCUMENT_SELECTOR, {
+			provideHover: (document, position/*, token*/) => {
+				let beforeText = getTextBeforeCursor(document, position);
+				if (isCursorInTheString(beforeText)) return [];
+				let textAround = getTextAroundCursor(document, position);
+				if (!textAround) return null;
+				let item = findHintItem(textAround);
+				if (!item)  // 大写开头的查不到，可以变成小写再查一下
+					item = findHintItem(textAround.toLowerCase());
+				if (!item) return null;
+				return new vscode.Hover([
+					HOVER_INFO_WORD, `*${item.usage}*`, item.desc
+				]);
+			}
+		}));
 
 	// subscriptions.push(
 	// 	vscode.languages.registerSignatureHelpProvider(DOCUMENT_SELECTOR, {
