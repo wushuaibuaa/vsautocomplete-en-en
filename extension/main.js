@@ -117,7 +117,7 @@ function activate(context) {
 					item = findHintItem(textAround.toLowerCase());
 				if (!item) return null;
 				return new vscode.Hover([
-					HOVER_INFO_WORD, `*${item.usage}*`, item.desc
+					`**${item.name}**`, `*${item.set}*`, item.desc
 				]);
 			}
 		}));

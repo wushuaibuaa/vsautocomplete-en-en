@@ -1,5 +1,5 @@
 # TODO
 
-In 2018
+In 2018:
 
-1. improve dictionary file and hint
+1. Improve dictionary file and hint detail.
