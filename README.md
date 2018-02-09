@@ -12,6 +12,16 @@
 1. When editing a **markdown** file and **latex** file in Code with **English word hint** installed, any type of English words will trigger a hint of word and give the explanation.
 
 
+## Usage
+
+Becase the markdown does not support quick suggestions in default. Therefore, the hint will not appear when type in markdown file. Below configure should be set by user.
+
+```json
+"[markdown]": {
+        "editor.quickSuggestions": true
+    }
+```
+
 ## Declaration
 
 1. Open source license of this extension is [GPL-3.0](LICENSE)

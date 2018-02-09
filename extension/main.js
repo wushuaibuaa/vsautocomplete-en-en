@@ -90,12 +90,13 @@ function activate(context) {
 		vscode.languages.registerCompletionItemProvider(DOCUMENT_SELECTOR, {
 			provideCompletionItems: (document, position/*, token*/) => {
 				let beforeText = getTextBeforeCursor(document, position);
+				// console.log(beforeText)
 				// beforeText = beforeText.toLowerCase()
 				if (isCursorInTheString(beforeText)) return [];
 				let keyword = (beforeText.match(/^.*?\b(\w*)$/) || ['', ''])[1];
 				// console.log(keyword)
 				if (!keyword) return wordCompletionItems;
-				// let keyword = beforeText;
+				// keyword = beforeText;
 				let items = searchHintCompletionItems(keyword);
 				if (items.length == 0)  // 大写开头的单词不能不全，转成小写搜索一遍
 					items = searchHintCompletionItems(keyword.toLowerCase());
@@ -112,9 +113,23 @@ function activate(context) {
 				if (isCursorInTheString(beforeText)) return [];
 				let textAround = getTextAroundCursor(document, position);
 				if (!textAround) return null;
+				let strlen = textAround.length;
 				let item = findHintItem(textAround);
 				if (!item)  // 大写开头的查不到，可以变成小写再查一下
 					item = findHintItem(textAround.toLowerCase());
+				if (!item && textAround.charAt(strlen - 1) == "s")// 复数查不到，去掉s查一下
+					item = findHintItem(textAround.substring(0, strlen - 1));
+				if (!item && textAround.substring(strlen - 2, strlen) == "es")// 复数查不到，去掉es查一下
+					item = findHintItem(textAround.substring(0, strlen - 2));
+				if (!item && textAround.substring(strlen - 2, strlen) == "ed")// 过去式, end with ed
+				{
+					item = findHintItem(textAround.substring(0, strlen - 1)); // 过去式,has e, added d, 
+					if (!item) {
+						item = findHintItem(textAround.substring(0, strlen - 2)); //过去式, end with ed
+						if (!item)
+							item = findHintItem(textAround.substring(0, strlen - 3)); //过去式, 辅音字母结尾的
+					}
+				}
 				if (!item) return null;
 				return new vscode.Hover([
 					`**${item.name}**`, `*${item.set}*`, item.desc
