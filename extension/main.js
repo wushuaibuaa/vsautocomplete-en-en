@@ -61,7 +61,7 @@ function loadHintData() {
 		item.documentation = word.desc;
 		item.detail = word.set;
 		item.usage = word.usage;
-		item._filter = word.name;
+		item._filter = word.name.toLowerCase();
 		wordCompletionItems.push(item);
 	});
 }
@@ -97,9 +97,7 @@ function activate(context) {
 				// console.log(keyword)
 				if (!keyword) return wordCompletionItems;
 				// keyword = beforeText;
-				let items = searchHintCompletionItems(keyword);
-				if (items.length == 0)  // 大写开头的单词不能不全，转成小写搜索一遍
-					items = searchHintCompletionItems(keyword.toLowerCase());
+				let items = searchHintCompletionItems(keyword.toLowerCase());
 				return items;
 			},
 			resolveCompletionItem: (item/*, token*/) => item
