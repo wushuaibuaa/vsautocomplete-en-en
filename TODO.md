@@ -1,8 +1,5 @@
 # TODO
 
-In August
+In 2018:
 
-1. add new awk scratch command
-2. add awk run/test command (run as pipe/ run with opening some text file)
-3. add some useful snippet(example: reading file, executing command ...)
-4. color/font-style \e ...
+1. Improve dictionary file and hint detail.
