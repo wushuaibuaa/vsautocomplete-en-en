@@ -53,7 +53,28 @@ function getFuncAndParamsInfoAroundCursor(textBeforeCursor) {
 
 function loadHintData() {
 	wordCompletionItems = [];
-	wordItems = require(HINT_DATA_FILES.WORD);
+	wordItems = require(HINT_DATA_FILES.WORD).map(item => {
+
+		let desc = item.desc;
+
+		// formatting desc in markdown
+		rest = desc.replace(/`/g,"'");
+
+		desc = ""
+		for (let i=1;; i++) {
+			const found = rest.match(` ${i} `)
+			if (found === null) break;
+			desc += rest.substr(0, found.index) + `\n${i}. `
+			rest = rest.substr(found.index + found[0].length);
+		}
+		desc += rest
+
+		desc = desc.replace(/:/g, `\n    * `);		// example sentence start 
+		desc = desc.replace(/ +\* /g, `\n    * `);	// example sentences are separated by " * "
+
+		item.desc = desc;
+		return item;
+	});
 	// window.alert(len(wordItems));
 	// console.log(wordItems.length);
 	wordItems.forEach(word => {
