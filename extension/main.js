@@ -100,7 +100,6 @@ function activate(context) {
                 let items = searchHintCompletionItems(keyword.toLowerCase());
 
                 if (keyword[0].toUpperCase() == keyword[0]) {
-                    console.log(items.length)
                     if (items.length > 0) {
                         for (let i = 0; i < items.length; i++) {
                             // 获取元素的 label 属性
