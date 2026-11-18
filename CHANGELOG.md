@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.1
+
+- Release build: regenerated the cleaned dictionary chunks (37,903 headwords / 43,396 senses) and packaged the VSIX.
+- No code changes since 0.3.0.
+
 ## 0.3.0
 
 ### Added
