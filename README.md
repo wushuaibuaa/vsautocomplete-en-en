@@ -10,11 +10,12 @@
 ## Hint Support
 
 1. When editing a **markdown** file and **latex** file in Code with **English word hint** installed, any type of English words will trigger a hint of word and give the explanation.
+2. Suggestions appear after at least **2 characters** and return at most **100** candidates, shortest words first.
 
 
 ## Usage
 
-Becase the markdown does not support quick suggestions in default. Therefore, the hint will not appear when type in markdown file. Below configure should be set by user.
+Because the markdown does not support quick suggestions in default. Therefore, the hint will not appear when type in markdown file. Below configure should be set by user.
 
 ```json
 "[markdown]": {
@@ -32,6 +33,16 @@ File description:
 
 - `extension/main.js` extension main script files
 - `hint_data/words.json` hint data json file from Oxford dictionary.
+- `split_words.js` build script that splits `words.json` into `hint_data/a.json` … `hint_data/z.json` for lazy loading.
+
+## Development
+
+```bash
+npm install
+npm run build   # generate hint_data/a-z.json from hint_data/words.json
+```
+
+Then press `F5` to launch the Extension Development Host. `vsce package` runs `npm run build` automatically through `vscode:prepublish`, and the generated chunks are the only hint data included in the VSIX.
 
 ## Author
 
