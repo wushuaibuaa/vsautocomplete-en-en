@@ -2,11 +2,12 @@ const vscode = require('vscode');
 const fs = require('fs');
 const path = require('path');
 const { Trie } = require('../lib/trie');
-const { getSenses, truncate, compareWords, getHoverCandidates } = require('../lib/word-text');
+const { getSenses, truncate, compareWords } = require('../lib/word-text');
+const { shouldSuppress, getWordAtCursor, getCompletionPrefix } = require('../lib/context');
 
 const HINT_DATA_DIR = path.join(__dirname, '../hint_data');
+const FORMS_DIR = path.join(HINT_DATA_DIR, 'forms');
 const DOCUMENT_SELECTOR = ['markdown', 'latex'];
-const QUOTES = '\'\"';
 const CONFIG_SECTION = 'englishWordHint';
 
 // 少于该长度的前缀不触发补全（单字母会命中数千条，淹没候选列表）
@@ -22,6 +23,8 @@ const MAX_HOVER_CHARS_PER_SENSE = 600;
 
 const trieChunkCache = new Map();
 const trieLoading = new Map();
+const formsCache = new Map();
+const formsLoading = new Map();
 const completionCache = new Map();
 let outputChannel;
 
@@ -40,36 +43,6 @@ function getConfig() {
         minPrefixLength: Number.isFinite(minPrefixLength) && minPrefixLength >= 1 ? minPrefixLength : DEFAULT_MIN_PREFIX_LENGTH,
         maxResults: Number.isFinite(maxResults) && maxResults >= 1 ? Math.min(maxResults, MAX_RESULTS_LIMIT) : DEFAULT_MAX_RESULTS
     };
-}
-
-function getTextBeforeCursor(document, position) {
-    var start = new vscode.Position(position.line, 0);
-    var range = new vscode.Range(start, position);
-    return document.getText(range);
-}
-
-function getTextAroundCursor(document, position) {
-    let lineText = document.lineAt(position).text,
-        pos = position.character;
-    let beforeText = lineText.slice(0, pos),
-        afterText = lineText.slice(pos);
-    beforeText = (beforeText.match(/\w*$/) || [''])[0];
-    afterText = (afterText.match(/^\w*/) || [''])[0];
-    return beforeText + afterText;
-}
-
-function isCursorInTheString(textBeforeCursor) {
-    if (textBeforeCursor.indexOf(QUOTES[0]) == -1 ||
-        textBeforeCursor.indexOf(QUOTES[1]) == -1) return false;
-    let len = textBeforeCursor.length, i = -1, inStr = false, char, qType;
-    while (++i < len) {
-        char = textBeforeCursor[i];
-        if (char == '\\')
-            i++;
-        else if ((qType = QUOTES.indexOf(char)) >= 0)
-            inStr = inStr == QUOTES[qType] ? false : QUOTES[qType];
-    }
-    return inStr;
 }
 
 function getCachedTrie(letter) {
@@ -151,12 +124,41 @@ async function findHintItem(wordname) {
     return trie.find(wordname) || null;
 }
 
+async function loadFormsFor(word) {
+    const letter = word[0] ? word[0].toLowerCase() : '';
+    if (!/[a-z]/.test(letter)) return null;
+    if (formsCache.has(letter)) return formsCache.get(letter);
+    if (formsLoading.has(letter)) return formsLoading.get(letter);
+    const loading = (async () => {
+        try {
+            const data = await fs.promises.readFile(path.join(FORMS_DIR, `${letter}.json`), 'utf8');
+            const forms = JSON.parse(data);
+            formsCache.set(letter, forms);
+            return forms;
+        } catch (error) {
+            logError(`无法加载词形索引 forms/${letter}.json`, error);
+            formsCache.set(letter, {});
+            return {};
+        } finally {
+            formsLoading.delete(letter);
+        }
+    })();
+    formsLoading.set(letter, loading);
+    return loading;
+}
+
+async function findFormBase(word) {
+    const forms = await loadFormsFor(word);
+    if (!forms) return null;
+    return forms[word.toLowerCase()] || null;
+}
+
 async function findHintItemForHover(word) {
-    for (const candidate of getHoverCandidates(word)) {
-        const item = await findHintItem(candidate);
-        if (item) return item;
-    }
-    return null;
+    const exact = await findHintItem(word) || await findHintItem(word.toLowerCase());
+    if (exact) return exact;
+    const base = await findFormBase(word);
+    if (!base || base.toLowerCase() === word.toLowerCase()) return null;
+    return (await findHintItem(base)) || (await findHintItem(base.toLowerCase()));
 }
 
 function buildCompletionDocumentation(word) {
@@ -210,9 +212,15 @@ function activate(context) {
                 try {
                     const config = getConfig();
                     if (!config.enabled) return [];
-                    let beforeText = getTextBeforeCursor(document, position);
-                    if (isCursorInTheString(beforeText)) return [];
-                    let keyword = (beforeText.match(/^.*?\b(\w*)$/) || ['', ''])[1];
+                    const lineText = document.lineAt(position).text;
+                    if (shouldSuppress({
+                        lineText,
+                        character: position.character,
+                        languageId: document.languageId,
+                        lineIndex: position.line,
+                        lineAt: index => document.lineAt(index).text
+                    })) return [];
+                    const keyword = getCompletionPrefix(lineText, position.character);
                     if (!keyword || keyword.length < config.minPrefixLength) {
                         // 空/过短前缀返回空但不完整的列表，继续输入后 VS Code 会重新请求
                         return new vscode.CompletionList([], true);
@@ -241,11 +249,17 @@ function activate(context) {
             provideHover: async (document, position) => {
                 try {
                     if (!getConfig().enabled) return null;
-                    let beforeText = getTextBeforeCursor(document, position);
-                    if (isCursorInTheString(beforeText)) return null;
-                    let textAround = getTextAroundCursor(document, position);
-                    if (!textAround) return null;
-                    let item = await findHintItemForHover(textAround);
+                    const lineText = document.lineAt(position).text;
+                    if (shouldSuppress({
+                        lineText,
+                        character: position.character,
+                        languageId: document.languageId,
+                        lineIndex: position.line,
+                        lineAt: index => document.lineAt(index).text
+                    })) return null;
+                    const word = getWordAtCursor(lineText, position.character);
+                    if (!word) return null;
+                    const item = await findHintItemForHover(word);
                     return item ? buildHover(item) : null;
                 } catch (error) {
                     logError('悬停释义请求失败', error);

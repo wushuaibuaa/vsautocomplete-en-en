@@ -45,3 +45,7 @@ Keep the source file shape so the build keeps working:
 npm run build
 npm test
 ```
+
+## Frequency data
+
+Completion ranking uses a SUBTLEX-derived frequency list provided by the [`subtlex-word-frequencies`](https://www.npmjs.com/package/subtlex-word-frequencies) package (ISC license, 74,286 entries). It is a development dependency used only by `npm run build`; the package itself is not included in the VSIX. Only numeric ranks derived from the list are written into the generated chunks. Attribution is in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { getSenses, truncate, compareWords, getHoverCandidates } = require('../lib/word-text');
+const { getSenses, truncate, compareWords, rankOf } = require('../lib/word-text');
 
 test('getSenses prefers the merged senses array', () => {
     const senses = [{ desc: 'first', usage: '' }];
@@ -20,15 +20,23 @@ test('truncate trims whitespace and appends an ellipsis only when needed', () =>
     assert.equal(truncate(null, 5), '');
 });
 
-test('compareWords orders by length then alphabetically', () => {
+test('compareWords ranks frequent words first', () => {
+    const words = [
+        { name: 'strabismus' },
+        { name: 'star', rank: 899 },
+        { name: 'st', rank: 2 },
+        { name: 'start', rank: 500 }
+    ];
+    assert.deepEqual(words.sort(compareWords).map(word => word.name), ['st', 'start', 'star', 'strabismus']);
+});
+
+test('compareWords falls back to length then alphabet for unranked words', () => {
     const words = [{ name: 'bb' }, { name: 'a' }, { name: 'ab' }, { name: 'aa' }];
     assert.deepEqual(words.sort(compareWords).map(word => word.name), ['a', 'aa', 'ab', 'bb']);
 });
 
-test('getHoverCandidates covers case and plural/past forms', () => {
-    assert.ok(getHoverCandidates('Have').includes('have'));
-    assert.ok(getHoverCandidates('drills').includes('drill'));
-    assert.ok(getHoverCandidates('drilled').includes('drill'));
-    assert.ok(getHoverCandidates('boxes').includes('box'));
-    assert.deepEqual(getHoverCandidates(''), []);
+test('rankOf treats missing ranks as lowest priority', () => {
+    assert.equal(rankOf({ rank: 0 }), 0);
+    assert.equal(rankOf({}), Number.MAX_SAFE_INTEGER);
+    assert.equal(rankOf({ rank: '3' }), Number.MAX_SAFE_INTEGER);
 });

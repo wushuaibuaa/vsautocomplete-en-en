@@ -65,4 +65,5 @@ typings/
 
 # 生成的词典分片（由 npm run build 从 hint_data/words.json 生成）
 hint_data/[a-z].json
+hint_data/forms/
 

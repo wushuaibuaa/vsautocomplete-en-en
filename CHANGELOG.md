@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.4.0
+
+### Added
+
+- Build-time form index covering plurals, past/gerund forms, comparatives, common irregulars, contractions and pronouns; hover now resolves `children`, `studies`, `known` and similar forms.
+- Context-aware suppression: Markdown frontmatter, inline code, fenced code, link targets; LaTeX comments, math and command names; URLs and emails.
+- Frequency-based completion ranking from a SUBTLEX-derived word list (build-time only); common words such as `the`, `still`, `stop` surface first.
+
+### Changed
+
+- Hover resolution is now exact headword → form index; the previous `s`/`es`/`ed` suffix guessing was removed.
+- Word extraction keeps apostrophes and hyphens, so `don't` and `well-known` are treated as one token.
+- Dictionary chunks and form chunks are written as compact JSON.
+
+### Fixed
+
+- Hover no longer mis-resolves typos such as `ted` or `don't` to the single-letter entry `t`.
+- Hover inside quoted strings, code, frontmatter and math is suppressed consistently.
+
 ## 0.3.1
 
 - Release build: regenerated the cleaned dictionary chunks (37,903 headwords / 43,396 senses) and packaged the VSIX.

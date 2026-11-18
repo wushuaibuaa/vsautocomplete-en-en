@@ -2,7 +2,7 @@
       "name": "autocomplete-english-word",
       "displayName": "English word hint",
       "description": "English word autocompletion for Visual Studio Code",
-      "version": "0.3.1",
+      "version": "0.4.0",
       "license": "GPL-3.0",
       "publisher": "wushuaiBUAA",
       "author": "wushuaiBUAA",
@@ -33,7 +33,8 @@
       },
       "devDependencies": {
             "@types/vscode": "^1.75.0",
-            "@vscode/vsce": "^4.1.1"
+            "@vscode/vsce": "^4.1.1",
+            "subtlex-word-frequencies": "^2.0.0"
       },
       "repository": {
             "type": "git",

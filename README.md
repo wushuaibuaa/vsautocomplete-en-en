@@ -10,7 +10,9 @@
 ## Hint Support
 
 1. When editing a **markdown** file and **latex** file in Code with **English word hint** installed, any type of English words will trigger a hint of word and give the explanation.
-2. Suggestions appear after the configured minimum prefix (**2 characters** by default), return at most **100** candidates by default, shortest words first, and merge all senses of a headword into one entry.
+2. Suggestions appear after the configured minimum prefix (**2 characters** by default), return at most **100** candidates by default, are ranked by word frequency, and merge all senses of a headword into one entry.
+3. Hover resolves inflected forms (`children` → `child`, `studies` → `study`, `known` → `know`) through a build-time form index.
+4. Suggestions and hover are suppressed inside quoted strings, Markdown code/frontmatter/link targets, LaTeX comments/math/commands, URLs and emails.
 
 ## Usage
 
@@ -45,11 +47,12 @@ npm run package   # produces a .vsix (vscode:prepublish runs the build)
 Project layout:
 
 - `extension/main.js` — VS Code glue: providers, caches, settings, logging
-- `lib/` — pure logic (`trie.js`, `word-text.js`) with unit tests
-- `scripts/split-words.js` — cleans `hint_data/words.json` and writes per-letter chunks
+- `lib/` — pure logic (`trie.js`, `word-text.js`, `context.js`) with unit tests
+- `scripts/split-words.js` — cleans `hint_data/words.json`, ranks words, and writes per-letter chunks plus the form index
 - `scripts/lib/clean-headword.js` — headword cleaning rules used by the build
+- `scripts/lib/word-forms.js` — inflection/irregular form generation used by the build
 - `test/` — `node:test` unit and integration tests; `test-support/` holds a minimal `vscode` stub
-- `hint_data/[a-z].json` — generated build artifacts (not committed); run `npm run build` after cloning
+- `hint_data/[a-z].json` and `hint_data/forms/` — generated build artifacts (not committed); run `npm run build` after cloning
 
 ## Declaration
 

@@ -10,23 +10,41 @@ const state = vscode.__state;
 const completionProvider = state.registered.completion[0].provider;
 const hoverProvider = state.registered.hover[0].provider;
 
-function documentFor(line) {
+function documentFor(line, languageId) {
     return {
-        getText(range) {
-            return line.slice(range.start.character, range.end.character);
-        },
+        languageId: languageId || 'markdown',
+        lineCount: 1,
         lineAt() {
             return { text: line };
         }
     };
 }
 
+function documentFromLines(lines, languageId) {
+    return {
+        languageId: languageId || 'markdown',
+        lineCount: lines.length,
+        lineAt(target) {
+            const index = typeof target === 'number' ? target : target.line;
+            return { text: lines[index] || '' };
+        }
+    };
+}
+
+function completeOn(document, line, character) {
+    return completionProvider.provideCompletionItems(document, new vscode.Position(line, character));
+}
+
+function hoverOn(document, line, character) {
+    return hoverProvider.provideHover(document, new vscode.Position(line, character));
+}
+
 function complete(line) {
-    return completionProvider.provideCompletionItems(documentFor(line), new vscode.Position(0, line.length));
+    return completeOn(documentFor(line), 0, line.length);
 }
 
 function hover(line) {
-    return hoverProvider.provideHover(documentFor(line), new vscode.Position(0, line.length));
+    return hoverOn(documentFor(line), 0, line.length);
 }
 
 function readChunk(letter) {
@@ -44,18 +62,12 @@ test('short prefixes are suppressed and marked incomplete', async () => {
     assert.equal(list.isIncomplete, true);
 });
 
-test('suggestions are capped, ranked and marked incomplete', async () => {
+test('suggestions are capped and marked incomplete', async () => {
     const list = await complete('st');
     assert.equal(list.items.length, 100);
     assert.equal(list.isIncomplete, true);
     for (let index = 1; index < list.items.length; index++) {
-        const previous = list.items[index - 1];
-        const current = list.items[index];
-        assert.ok(previous.sortText < current.sortText);
-        assert.ok(previous.label.length <= current.label.length);
-        if (previous.label.length === current.label.length) {
-            assert.ok(previous.label <= current.label);
-        }
+        assert.ok(list.items[index - 1].sortText < list.items[index].sortText);
     }
 });
 
@@ -106,6 +118,46 @@ test('settings control prefix length, result count and enabled state', async () 
         delete state.settings['englishWordHint.maxResults'];
         delete state.settings['englishWordHint.enabled'];
     }
+});
+
+test('frequency ranks common words first', async () => {
+    const list = await complete('th');
+    assert.equal(list.items[0].label, 'the');
+});
+
+test('hover resolves inflected forms through the form index', async () => {
+    for (const [form, base] of [['children', 'child'], ['studies', 'study'], ['known', 'know']]) {
+        const result = await hover(form);
+        assert.ok(result, `${form} should resolve`);
+        assert.ok(
+            result.contents.value.startsWith(`**${base}**`),
+            `${form} should resolve to ${base}, got ${result.contents.value.slice(0, 30)}`
+        );
+    }
+    assert.equal(await hover('ted'), null);
+    const contraction = await hover("don't");
+    assert.ok(contraction);
+    assert.ok(contraction.contents.value.startsWith("**don't**"));
+});
+
+test('context suppression skips markdown code, frontmatter and latex math', async () => {
+    const inline = documentFor('use `children` here');
+    assert.equal((await completeOn(inline, 0, 8)).length, 0);
+    assert.equal(await hoverOn(inline, 0, 8), null);
+
+    const fenced = documentFromLines(['```', 'children', '```']);
+    assert.equal((await completeOn(fenced, 1, 8)).length, 0);
+    assert.equal(await hoverOn(fenced, 1, 8), null);
+
+    const frontmatter = documentFromLines(['---', 'title: children', '---', 'body children']);
+    assert.equal(await hoverOn(frontmatter, 1, 15), null);
+    assert.ok(await hoverOn(frontmatter, 3, 13));
+
+    const math = documentFor('$children$', 'latex');
+    assert.equal(await hoverOn(math, 0, 6), null);
+
+    const command = documentFor('\\section', 'latex');
+    assert.equal((await completeOn(command, 0, 4)).length, 0);
 });
 
 test('quoted strings are ignored', async () => {
