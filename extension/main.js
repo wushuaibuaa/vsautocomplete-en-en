@@ -1,7 +1,8 @@
-/// <reference path="../vscode.d.ts" />
 const vscode = require('vscode');
 const fs = require('fs');
 const path = require('path');
+const { Trie } = require('../lib/trie');
+const { getSenses, truncate, compareWords, getHoverCandidates } = require('../lib/word-text');
 
 const HINT_DATA_DIR = path.join(__dirname, '../hint_data');
 const DOCUMENT_SELECTOR = ['markdown', 'latex'];
@@ -71,52 +72,6 @@ function isCursorInTheString(textBeforeCursor) {
     return inStr;
 }
 
-function getSenses(word) {
-    if (Array.isArray(word.senses) && word.senses.length > 0) return word.senses;
-    return [{ desc: word.desc || '', usage: word.usage || word.useage || '' }];
-}
-
-function truncate(text, limit) {
-    const value = (text || '').trim();
-    return value.length > limit ? value.slice(0, limit).replace(/\s+$/, '') + '…' : value;
-}
-
-class TrieNode {
-    constructor() {
-        this.children = {};
-        this.words = [];
-    }
-}
-class Trie {
-    constructor() {
-        this.root = new TrieNode();
-    }
-    insert(wordObj) {
-        let node = this.root;
-        for (let char of wordObj.name) {
-            if (!node.children[char]) node.children[char] = new TrieNode();
-            node = node.children[char];
-            node.words.push(wordObj);
-        }
-    }
-    search(prefix) {
-        let node = this.root;
-        for (let char of prefix) {
-            if (!node.children[char]) return [];
-            node = node.children[char];
-        }
-        return node.words;
-    }
-    find(wordname) {
-        let node = this.root;
-        for (let char of wordname) {
-            if (!node.children[char]) return null;
-            node = node.children[char];
-        }
-        return node.words.find(w => w.name === wordname) || null;
-    }
-}
-
 function getCachedTrie(letter) {
     const trie = trieChunkCache.get(letter);
     if (!trie) return null;
@@ -184,9 +139,7 @@ async function searchHintCompletionItems(keyword) {
         items = trie.search(keyword.toLowerCase());
     }
     // 短词优先（通常更常用），同长度按字母序，保证候选顺序可预期
-    items = items.slice().sort((a, b) =>
-        a.name.length - b.name.length || (a.name < b.name ? -1 : a.name > b.name ? 1 : 0)
-    );
+    items = items.slice().sort(compareWords);
     setCompletionCache(keyword, items);
     return items;
 }
@@ -199,14 +152,7 @@ async function findHintItem(wordname) {
 }
 
 async function findHintItemForHover(word) {
-    const candidates = [word, word.toLowerCase()];
-    if (word.endsWith('s')) candidates.push(word.slice(0, -1));
-    if (word.endsWith('es')) candidates.push(word.slice(0, -2));
-    if (word.endsWith('ed')) {
-        candidates.push(word.slice(0, -1), word.slice(0, -2), word.slice(0, -3));
-    }
-    for (const candidate of candidates) {
-        if (!candidate) continue;
+    for (const candidate of getHoverCandidates(word)) {
         const item = await findHintItem(candidate);
         if (item) return item;
     }

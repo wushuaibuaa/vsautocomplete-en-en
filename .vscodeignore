@@ -1,10 +1,11 @@
 icon/icon.svg
 test_awk_files/**
 utils/**
-vscode.d.ts
-# 源数据与构建脚本（分片由 npm run build 生成，仍然打包）
 hint_data/words.json
-split_words.js
+scripts/**
+test/**
+test-support/**
+.github/**
 package-lock.json
 .eslintrc.json
 .vscode/**
