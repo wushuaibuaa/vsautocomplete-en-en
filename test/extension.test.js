@@ -160,6 +160,85 @@ test('context suppression skips markdown code, frontmatter and latex math', asyn
     assert.equal((await completeOn(command, 0, 4)).length, 0);
 });
 
+test('completion and hover toggles are independent', async () => {
+    try {
+        state.settings['englishWordHint.completionEnabled'] = false;
+        const disabledCompletion = await complete('st');
+        assert.ok(Array.isArray(disabledCompletion));
+        assert.equal(disabledCompletion.length, 0);
+        assert.ok(await hover('have'));
+        state.settings['englishWordHint.completionEnabled'] = true;
+
+        state.settings['englishWordHint.hoverEnabled'] = false;
+        assert.ok((await complete('st')).items.length > 0);
+        assert.equal(await hover('have'), null);
+    } finally {
+        delete state.settings['englishWordHint.completionEnabled'];
+        delete state.settings['englishWordHint.hoverEnabled'];
+    }
+});
+
+test('language setting gates providers', async () => {
+    try {
+        state.settings['englishWordHint.languages'] = ['latex'];
+        assert.equal((await complete('st')).length, 0);
+        assert.equal(await hover('have'), null);
+        assert.ok(await hoverOn(documentFor('children', 'latex'), 0, 8));
+    } finally {
+        delete state.settings['englishWordHint.languages'];
+    }
+});
+
+test('user words and ignored words affect completion and hover', async () => {
+    try {
+        state.settings['englishWordHint.userWords'] = ['xyzzyword'];
+        const list = await complete('xyzz');
+        assert.equal(list.items[0].label, 'xyzzyword');
+        assert.ok(await hover('xyzzyword'));
+
+        state.settings['englishWordHint.ignoredWords'] = ['xyzzyword', 'have'];
+        assert.equal((await complete('xyzz')).items.length, 0);
+        assert.equal(await hover('xyzzyword'), null);
+        assert.equal(await hover('have'), null);
+    } finally {
+        delete state.settings['englishWordHint.userWords'];
+        delete state.settings['englishWordHint.ignoredWords'];
+    }
+});
+
+test('multiword completions insert spaces', async () => {
+    const list = await complete('commander');
+    const item = list.items.find(candidate => candidate.label === 'commander-in-chief');
+    assert.ok(item, 'commander-in-chief should be suggested');
+    assert.equal(item.insertText, 'commander in chief');
+    assert.equal(item.kind, vscode.CompletionItemKind.Text);
+});
+
+test('commands update settings and open the full entry', async () => {
+    state.activeTextEditor = {
+        document: documentFor('children'),
+        selection: { active: new vscode.Position(0, 8) }
+    };
+    try {
+        await state.commands['englishWordHint.addUserWord']();
+        assert.deepEqual(state.settings['englishWordHint.userWords'], ['children']);
+
+        state.openedDocuments.length = 0;
+        await state.commands['englishWordHint.showFullEntry']();
+        assert.equal(state.openedDocuments.length, 1);
+        assert.match(state.openedDocuments[0].document.content, /^# child/);
+
+        await state.commands['englishWordHint.ignoreWord']();
+        assert.deepEqual(state.settings['englishWordHint.ignoredWords'], ['children']);
+    } finally {
+        state.activeTextEditor = null;
+        delete state.settings['englishWordHint.userWords'];
+        delete state.settings['englishWordHint.ignoredWords'];
+        state.openedDocuments.length = 0;
+        state.messages.length = 0;
+    }
+});
+
 test('quoted strings are ignored', async () => {
     const list = await complete('"it\'s st');
     assert.ok(Array.isArray(list));

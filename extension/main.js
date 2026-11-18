@@ -2,12 +2,13 @@ const vscode = require('vscode');
 const fs = require('fs');
 const path = require('path');
 const { Trie } = require('../lib/trie');
-const { getSenses, truncate, compareWords } = require('../lib/word-text');
+const { getSenses, truncate, compareWords, insertTextFor, buildFullEntry } = require('../lib/word-text');
 const { shouldSuppress, getWordAtCursor, getCompletionPrefix } = require('../lib/context');
 
 const HINT_DATA_DIR = path.join(__dirname, '../hint_data');
 const FORMS_DIR = path.join(HINT_DATA_DIR, 'forms');
-const DOCUMENT_SELECTOR = ['markdown', 'latex'];
+const DOCUMENT_SELECTOR = ['markdown', 'latex', 'plaintext'];
+const DEFAULT_LANGUAGES = ['markdown', 'latex', 'plaintext'];
 const CONFIG_SECTION = 'englishWordHint';
 
 // 少于该长度的前缀不触发补全（单字母会命中数千条，淹没候选列表）
@@ -38,8 +39,22 @@ function getConfig() {
     const config = vscode.workspace.getConfiguration(CONFIG_SECTION);
     const minPrefixLength = Number(config.get('minPrefixLength', DEFAULT_MIN_PREFIX_LENGTH));
     const maxResults = Number(config.get('maxResults', DEFAULT_MAX_RESULTS));
+    const languages = config.get('languages', DEFAULT_LANGUAGES);
+    const userWords = config.get('userWords', []);
+    const ignoredWords = config.get('ignoredWords', []);
     return {
         enabled: config.get('enabled', true) !== false,
+        completionEnabled: config.get('completionEnabled', true) !== false,
+        hoverEnabled: config.get('hoverEnabled', true) !== false,
+        languages: Array.isArray(languages)
+            ? languages.filter(language => typeof language === 'string')
+            : DEFAULT_LANGUAGES,
+        userWords: Array.isArray(userWords)
+            ? userWords.filter(word => typeof word === 'string' && word.trim()).map(word => word.trim())
+            : [],
+        ignoredWords: Array.isArray(ignoredWords)
+            ? ignoredWords.filter(word => typeof word === 'string' && word.trim()).map(word => word.trim())
+            : [],
         minPrefixLength: Number.isFinite(minPrefixLength) && minPrefixLength >= 1 ? minPrefixLength : DEFAULT_MIN_PREFIX_LENGTH,
         maxResults: Number.isFinite(maxResults) && maxResults >= 1 ? Math.min(maxResults, MAX_RESULTS_LIMIT) : DEFAULT_MAX_RESULTS
     };
@@ -161,6 +176,70 @@ async function findHintItemForHover(word) {
     return (await findHintItem(base)) || (await findHintItem(base.toLowerCase()));
 }
 
+async function resolveEntry(word, config) {
+    if (config.ignoredWords.some(ignored => ignored.toLowerCase() === word.toLowerCase())) return null;
+    const item = await findHintItemForHover(word);
+    if (item) return item;
+    const userWord = config.userWords.find(candidate => candidate.toLowerCase() === word.toLowerCase());
+    return userWord ? { name: userWord, set: '', senses: [{ desc: 'User dictionary word' }] } : null;
+}
+
+function getWordAtActiveCursor() {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor) return null;
+    const position = editor.selection.active;
+    const lineText = editor.document.lineAt(position.line).text;
+    return getWordAtCursor(lineText, position.character);
+}
+
+async function addUserWord() {
+    const word = getWordAtActiveCursor();
+    if (!word) {
+        vscode.window.showInformationMessage('English Word Hint: place the cursor on a word first.');
+        return;
+    }
+    const config = vscode.workspace.getConfiguration(CONFIG_SECTION);
+    const current = config.get('userWords', []);
+    const words = Array.isArray(current) ? current : [];
+    if (!words.some(existing => existing.toLowerCase() === word.toLowerCase())) {
+        await config.update('userWords', [...words, word], vscode.ConfigurationTarget.Global);
+    }
+    vscode.window.showInformationMessage(`English Word Hint: added "${word}" to the user dictionary.`);
+}
+
+async function ignoreWord() {
+    const word = getWordAtActiveCursor();
+    if (!word) {
+        vscode.window.showInformationMessage('English Word Hint: place the cursor on a word first.');
+        return;
+    }
+    const config = vscode.workspace.getConfiguration(CONFIG_SECTION);
+    const current = config.get('ignoredWords', []);
+    const words = Array.isArray(current) ? current : [];
+    if (!words.some(existing => existing.toLowerCase() === word.toLowerCase())) {
+        await config.update('ignoredWords', [...words, word], vscode.ConfigurationTarget.Global);
+    }
+    vscode.window.showInformationMessage(`English Word Hint: ignored "${word}".`);
+}
+
+async function showFullEntry() {
+    const word = getWordAtActiveCursor();
+    if (!word) {
+        vscode.window.showInformationMessage('English Word Hint: place the cursor on a word first.');
+        return;
+    }
+    const item = await resolveEntry(word, getConfig());
+    if (!item) {
+        vscode.window.showInformationMessage(`English Word Hint: no entry found for "${word}".`);
+        return;
+    }
+    const document = await vscode.workspace.openTextDocument({
+        language: 'markdown',
+        content: buildFullEntry(item)
+    });
+    await vscode.window.showTextDocument(document, { preview: true });
+}
+
 function buildCompletionDocumentation(word) {
     const senses = getSenses(word);
     const markdown = new vscode.MarkdownString();
@@ -211,7 +290,8 @@ function activate(context) {
             provideCompletionItems: async (document, position) => {
                 try {
                     const config = getConfig();
-                    if (!config.enabled) return [];
+                    if (!config.enabled || !config.completionEnabled) return [];
+                    if (!config.languages.includes(document.languageId)) return [];
                     const lineText = document.lineAt(position).text;
                     if (shouldSuppress({
                         lineText,
@@ -225,16 +305,30 @@ function activate(context) {
                         // 空/过短前缀返回空但不完整的列表，继续输入后 VS Code 会重新请求
                         return new vscode.CompletionList([], true);
                     }
-                    let items = await searchHintCompletionItems(keyword);
-                    let completionItems = items.slice(0, config.maxResults).map((word, index) => {
-                        let item = new vscode.CompletionItem(word.name, vscode.CompletionItemKind.Function);
+                    const items = await searchHintCompletionItems(keyword);
+                    const lowerKeyword = keyword.toLowerCase();
+                    const ignored = new Set(config.ignoredWords.map(word => word.toLowerCase()));
+                    const userWords = config.userWords.filter(word =>
+                        word.toLowerCase().startsWith(lowerKeyword) && !ignored.has(word.toLowerCase())
+                    );
+                    const userKeys = new Set(userWords.map(word => word.toLowerCase()));
+                    const entries = [
+                        ...userWords.map(name => ({ name, set: '', senses: [{ desc: 'User dictionary word' }] })),
+                        ...items.filter(word =>
+                            !ignored.has(word.name.toLowerCase()) && !userKeys.has(word.name.toLowerCase())
+                        )
+                    ];
+                    let completionItems = entries.slice(0, config.maxResults).map((word, index) => {
+                        let item = new vscode.CompletionItem(word.name, vscode.CompletionItemKind.Text);
                         item.documentation = buildCompletionDocumentation(word);
                         item.detail = word.set;
+                        item.filterText = word.name;
+                        item.insertText = insertTextFor(word.name);
                         item.sortText = ('0000' + index).slice(-4);
                         return item;
                     });
                     // 超过上限时标记不完整，让 VS Code 在继续输入时重新请求并拿到更精确的结果
-                    return new vscode.CompletionList(completionItems, items.length > config.maxResults);
+                    return new vscode.CompletionList(completionItems, entries.length > config.maxResults);
                 } catch (error) {
                     logError('补全请求失败', error);
                     return [];
@@ -248,7 +342,9 @@ function activate(context) {
         vscode.languages.registerHoverProvider(DOCUMENT_SELECTOR, {
             provideHover: async (document, position) => {
                 try {
-                    if (!getConfig().enabled) return null;
+                    const config = getConfig();
+                    if (!config.enabled || !config.hoverEnabled) return null;
+                    if (!config.languages.includes(document.languageId)) return null;
                     const lineText = document.lineAt(position).text;
                     if (shouldSuppress({
                         lineText,
@@ -259,7 +355,7 @@ function activate(context) {
                     })) return null;
                     const word = getWordAtCursor(lineText, position.character);
                     if (!word) return null;
-                    const item = await findHintItemForHover(word);
+                    const item = await resolveEntry(word, config);
                     return item ? buildHover(item) : null;
                 } catch (error) {
                     logError('悬停释义请求失败', error);
@@ -267,6 +363,11 @@ function activate(context) {
                 }
             }
         })
+    );
+    context.subscriptions.push(
+        vscode.commands.registerCommand('englishWordHint.addUserWord', addUserWord),
+        vscode.commands.registerCommand('englishWordHint.ignoreWord', ignoreWord),
+        vscode.commands.registerCommand('englishWordHint.showFullEntry', showFullEntry)
     );
 }
 

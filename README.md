@@ -13,6 +13,9 @@
 2. Suggestions appear after the configured minimum prefix (**2 characters** by default), return at most **100** candidates by default, are ranked by word frequency, and merge all senses of a headword into one entry.
 3. Hover resolves inflected forms (`children` → `child`, `studies` → `study`, `known` → `know`) through a build-time form index.
 4. Suggestions and hover are suppressed inside quoted strings, Markdown code/frontmatter/link targets, LaTeX comments/math/commands, URLs and emails.
+5. Also works in **plaintext**; completion and hover can be toggled independently.
+6. Right-click commands: **Add Word to User Dictionary**, **Ignore Word**, **Show Full Entry**. User words are offered first; ignored words are hidden; the full entry opens as a Markdown document with every sense.
+7. Multiword headwords insert with spaces (`commander-in-chief` → `commander in chief`) while hyphenated compounds such as `well-known` stay unchanged.
 
 ## Usage
 
@@ -28,7 +31,12 @@ The extension enables quick suggestions for markdown by default through `configu
 
 | Setting | Default | Description |
 | --- | --- | --- |
-| `englishWordHint.enabled` | `true` | Enable completion and hover hints. |
+| `englishWordHint.enabled` | `true` | Master switch for the extension. |
+| `englishWordHint.completionEnabled` | `true` | Enable completion suggestions. |
+| `englishWordHint.hoverEnabled` | `true` | Enable hover definitions. |
+| `englishWordHint.languages` | `["markdown", "latex", "plaintext"]` | Language IDs where the extension is active. |
+| `englishWordHint.userWords` | `[]` | Extra words offered in completion and hover. |
+| `englishWordHint.ignoredWords` | `[]` | Words suppressed from completion and hover. |
 | `englishWordHint.minPrefixLength` | `2` | Characters required before suggestions appear. |
 | `englishWordHint.maxResults` | `100` | Maximum suggestions returned at once. |
 

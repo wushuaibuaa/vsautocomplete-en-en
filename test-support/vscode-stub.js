@@ -50,8 +50,33 @@ class MarkdownString {
 
 const state = {
     settings: {},
+    updatedSettings: [],
     outputLines: [],
+    messages: [],
+    openedDocuments: [],
+    commands: {},
+    activeTextEditor: null,
     registered: { completion: [], hover: [] }
+};
+
+const windowApi = {
+    createOutputChannel(name) {
+        return {
+            name,
+            appendLine(line) { state.outputLines.push(line); },
+            dispose() {}
+        };
+    },
+    showInformationMessage(message) {
+        state.messages.push(message);
+    },
+    showTextDocument(document, options) {
+        state.openedDocuments.push({ document, options });
+        return document;
+    },
+    get activeTextEditor() {
+        return state.activeTextEditor;
+    }
 };
 
 module.exports = {
@@ -62,6 +87,7 @@ module.exports = {
     Hover,
     MarkdownString,
     CompletionItemKind: { Function: 2, Text: 1 },
+    ConfigurationTarget: { Global: 1, Workspace: 2, WorkspaceFolder: 3 },
     languages: {
         registerCompletionItemProvider(selector, provider) {
             state.registered.completion.push({ selector, provider });
@@ -72,24 +98,30 @@ module.exports = {
             return { dispose() {} };
         }
     },
+    commands: {
+        registerCommand(name, handler) {
+            state.commands[name] = handler;
+            return { dispose() {} };
+        }
+    },
     workspace: {
         getConfiguration(section) {
             return {
                 get(key, fallback) {
                     const full = section ? `${section}.${key}` : key;
                     return state.settings[full] !== undefined ? state.settings[full] : fallback;
+                },
+                update(key, value, target) {
+                    const full = section ? `${section}.${key}` : key;
+                    state.settings[full] = value;
+                    state.updatedSettings.push({ key: full, value, target });
                 }
             };
+        },
+        openTextDocument(options) {
+            return options;
         }
     },
-    window: {
-        createOutputChannel(name) {
-            return {
-                name,
-                appendLine(line) { state.outputLines.push(line); },
-                dispose() {}
-            };
-        }
-    },
+    window: windowApi,
     __state: state
 };

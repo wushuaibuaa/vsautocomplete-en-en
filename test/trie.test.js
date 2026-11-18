@@ -27,3 +27,14 @@ test('search result is the node word list, not a copy', () => {
     first.push({ name: 'injected' });
     assert.ok(trie.search('st').some(word => word.name === 'injected'));
 });
+
+test('search and find are case-insensitive but prefer the exact case', () => {
+    const trie = new Trie();
+    trie.insert({ name: 'Apple' });
+    trie.insert({ name: 'apple' });
+    assert.ok(trie.search('a').some(word => word.name === 'Apple'));
+    assert.ok(trie.search('A').some(word => word.name === 'apple'));
+    assert.equal(trie.find('Apple').name, 'Apple');
+    assert.equal(trie.find('apple').name, 'apple');
+    assert.equal(trie.find('APPLE').name, 'Apple');
+});

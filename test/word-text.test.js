@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { getSenses, truncate, compareWords, rankOf } = require('../lib/word-text');
+const { getSenses, truncate, compareWords, rankOf, isMultiword, insertTextFor, buildFullEntry } = require('../lib/word-text');
 
 test('getSenses prefers the merged senses array', () => {
     const senses = [{ desc: 'first', usage: '' }];
@@ -39,4 +39,24 @@ test('rankOf treats missing ranks as lowest priority', () => {
     assert.equal(rankOf({ rank: 0 }), 0);
     assert.equal(rankOf({}), Number.MAX_SAFE_INTEGER);
     assert.equal(rankOf({ rank: '3' }), Number.MAX_SAFE_INTEGER);
+});
+
+test('multiword entries insert spaces while compounds stay hyphenated', () => {
+    assert.equal(isMultiword('commander-in-chief'), true);
+    assert.equal(insertTextFor('commander-in-chief'), 'commander in chief');
+    assert.equal(insertTextFor('the-United-Kingdom'), 'the United Kingdom');
+    assert.equal(insertTextFor('well-known'), 'well-known');
+    assert.equal(insertTextFor('A-OK'), 'A-OK');
+});
+
+test('buildFullEntry renders every sense', () => {
+    const text = buildFullEntry({
+        name: 'have',
+        set: 'phonetic',
+        senses: [{ desc: 'one', usage: 'u1' }, { desc: 'two' }]
+    });
+    assert.match(text, /^# have/);
+    assert.match(text, /## 1/);
+    assert.match(text, /## 2/);
+    assert.match(text, /u1/);
 });

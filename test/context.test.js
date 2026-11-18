@@ -83,5 +83,6 @@ test('suppresses multiline latex math environments', () => {
 test('normal prose is not suppressed', () => {
     assert.equal(shouldSuppress(options('a normal sentence about children', 28, 'markdown')), false);
     assert.equal(shouldSuppress(options('a normal sentence', 8, 'latex')), false);
+    assert.equal(shouldSuppress(options('a normal sentence', 8, 'plaintext')), false);
     assert.equal(shouldSuppress(options('a normal sentence', 8, '')), false);
 });

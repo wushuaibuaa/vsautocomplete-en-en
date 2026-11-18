@@ -2,7 +2,7 @@
       "name": "autocomplete-english-word",
       "displayName": "English word hint",
       "description": "English word autocompletion for Visual Studio Code",
-      "version": "0.4.0",
+      "version": "0.4.1",
       "license": "GPL-3.0",
       "publisher": "wushuaiBUAA",
       "author": "wushuaiBUAA",
@@ -43,7 +43,11 @@
       "homepage": "https://github.com/wushuaibuaa/vsautocomplete-en-en",
       "activationEvents": [
             "onLanguage:markdown",
-            "onLanguage:latex"
+            "onLanguage:latex",
+            "onLanguage:plaintext",
+            "onCommand:englishWordHint.addUserWord",
+            "onCommand:englishWordHint.ignoreWord",
+            "onCommand:englishWordHint.showFullEntry"
       ],
       "contributes": {
             "configuration": {
@@ -52,7 +56,41 @@
                         "englishWordHint.enabled": {
                               "type": "boolean",
                               "default": true,
-                              "description": "Enable English word completion and hover hints."
+                              "description": "Master switch for the extension."
+                        },
+                        "englishWordHint.completionEnabled": {
+                              "type": "boolean",
+                              "default": true,
+                              "description": "Enable completion suggestions."
+                        },
+                        "englishWordHint.hoverEnabled": {
+                              "type": "boolean",
+                              "default": true,
+                              "description": "Enable hover definitions."
+                        },
+                        "englishWordHint.languages": {
+                              "type": "array",
+                              "items": {
+                                    "type": "string"
+                              },
+                              "default": ["markdown", "latex", "plaintext"],
+                              "description": "Language IDs where the extension is active."
+                        },
+                        "englishWordHint.userWords": {
+                              "type": "array",
+                              "items": {
+                                    "type": "string"
+                              },
+                              "default": [],
+                              "description": "Extra words offered in completion and hover."
+                        },
+                        "englishWordHint.ignoredWords": {
+                              "type": "array",
+                              "items": {
+                                    "type": "string"
+                              },
+                              "default": [],
+                              "description": "Words suppressed from completion and hover."
                         },
                         "englishWordHint.minPrefixLength": {
                               "type": "number",
@@ -70,8 +108,47 @@
                         }
                   }
             },
+            "commands": [
+                  {
+                        "command": "englishWordHint.addUserWord",
+                        "title": "Add Word to User Dictionary",
+                        "category": "English Word Hint"
+                  },
+                  {
+                        "command": "englishWordHint.ignoreWord",
+                        "title": "Ignore Word",
+                        "category": "English Word Hint"
+                  },
+                  {
+                        "command": "englishWordHint.showFullEntry",
+                        "title": "Show Full Entry",
+                        "category": "English Word Hint"
+                  }
+            ],
+            "menus": {
+                  "editor/context": [
+                        {
+                              "command": "englishWordHint.showFullEntry",
+                              "when": "editorLangId == markdown || editorLangId == latex || editorLangId == plaintext",
+                              "group": "navigation@10"
+                        },
+                        {
+                              "command": "englishWordHint.addUserWord",
+                              "when": "editorLangId == markdown || editorLangId == latex || editorLangId == plaintext",
+                              "group": "navigation@11"
+                        },
+                        {
+                              "command": "englishWordHint.ignoreWord",
+                              "when": "editorLangId == markdown || editorLangId == latex || editorLangId == plaintext",
+                              "group": "navigation@12"
+                        }
+                  ]
+            },
             "configurationDefaults": {
                   "[markdown]": {
+                        "editor.quickSuggestions": true
+                  },
+                  "[plaintext]": {
                         "editor.quickSuggestions": true
                   }
             }

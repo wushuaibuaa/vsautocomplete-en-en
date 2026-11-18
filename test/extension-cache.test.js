@@ -10,9 +10,8 @@ const completionProvider = state.registered.completion[0].provider;
 
 function documentFor(line) {
     return {
-        getText(range) {
-            return line.slice(range.start.character, range.end.character);
-        },
+        languageId: 'markdown',
+        lineCount: 1,
         lineAt() {
             return { text: line };
         }

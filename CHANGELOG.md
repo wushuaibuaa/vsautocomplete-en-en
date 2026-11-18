@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.4.1
+
+### Added
+
+- Independent `completionEnabled` and `hoverEnabled` switches, plus a configurable `languages` list (markdown, latex, plaintext).
+- User dictionary (`userWords`) and ignore list (`ignoredWords`) settings.
+- Commands: Add Word to User Dictionary, Ignore Word, Show Full Entry (also available in the editor context menu).
+- Plaintext support.
+- Multiword headwords insert spaces (`commander-in-chief` → `commander in chief`).
+
+### Changed
+
+- Completion items use the `Text` kind and set `insertText`/`filterText` explicitly.
+- Trie lookup is case-insensitive and prefers the exact case when several headwords differ only by case.
+- Completion and hover filter ignored words; user words are offered first.
+
 ## 0.4.0
 
 ### Added
