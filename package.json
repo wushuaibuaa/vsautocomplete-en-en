@@ -46,5 +46,36 @@
       "activationEvents": [
             "onLanguage:markdown",
             "onLanguage:latex"
-      ]
+      ],
+      "contributes": {
+            "configuration": {
+                  "title": "English Word Hint",
+                  "properties": {
+                        "englishWordHint.enabled": {
+                              "type": "boolean",
+                              "default": true,
+                              "description": "Enable English word completion and hover hints."
+                        },
+                        "englishWordHint.minPrefixLength": {
+                              "type": "number",
+                              "default": 2,
+                              "minimum": 1,
+                              "maximum": 10,
+                              "description": "Minimum number of typed characters before completion suggestions appear."
+                        },
+                        "englishWordHint.maxResults": {
+                              "type": "number",
+                              "default": 100,
+                              "minimum": 1,
+                              "maximum": 1000,
+                              "description": "Maximum number of completion suggestions returned at once."
+                        }
+                  }
+            },
+            "configurationDefaults": {
+                  "[markdown]": {
+                        "editor.quickSuggestions": true
+                  }
+            }
+      }
 }

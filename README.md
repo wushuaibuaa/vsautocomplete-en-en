@@ -10,18 +10,26 @@
 ## Hint Support
 
 1. When editing a **markdown** file and **latex** file in Code with **English word hint** installed, any type of English words will trigger a hint of word and give the explanation.
-2. Suggestions appear after at least **2 characters** and return at most **100** candidates, shortest words first.
+2. Suggestions appear after the configured minimum prefix (**2 characters** by default), return at most **100** candidates by default, shortest words first, and merge all senses of a headword into one entry.
 
 
 ## Usage
 
-Because the markdown does not support quick suggestions in default. Therefore, the hint will not appear when type in markdown file. Below configure should be set by user.
+The extension enables quick suggestions for markdown by default through `configurationDefaults`, so no manual setup is required. If you have explicitly disabled `editor.quickSuggestions` for markdown, re-enable it:
 
 ```json
 "[markdown]": {
         "editor.quickSuggestions": true
     }
 ```
+
+## Settings
+
+| Setting | Default | Description |
+| --- | --- | --- |
+| `englishWordHint.enabled` | `true` | Enable completion and hover hints. |
+| `englishWordHint.minPrefixLength` | `2` | Characters required before suggestions appear. |
+| `englishWordHint.maxResults` | `100` | Maximum suggestions returned at once. |
 
 ## Declaration
 
